@@ -44,4 +44,35 @@ Please provide a helpful response:
       return "I'm sorry, but I'm currently experiencing technical difficulties. If you're in immediate danger, please use the 'I am not safe' button above.";
     }
   }
+
+  Future<String> analyzeDialog(String dialog) async {
+    try {
+      final prompt = '''
+You are a law enforcement AI assistant analyzing a potential criminal incident dialog.
+Please create a detailed criminal statement report with the following sections:
+
+1. INCIDENT SUMMARY
+2. VICTIM DETAILS
+3. SUSPECT DETAILS
+4. EVIDENCE OF PHYSICAL ABUSE
+5. THREAT ANALYSIS
+6. RECOMMENDATIONS
+
+Analyze the tone, identify any physical abuse mentions, and assess the severity of the situation.
+Focus on documenting evidence that could be useful for law enforcement.
+
+Dialog transcript:
+$dialog
+
+Generate a formal criminal report:
+''';
+
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content);
+      return response.text ?? "Error generating report";
+    } catch (e) {
+      print('Error in analyzeDialog: $e');
+      return "Error generating criminal report";
+    }
+  }
 }

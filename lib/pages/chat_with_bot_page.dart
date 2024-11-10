@@ -4,6 +4,8 @@ import '../services/gemini_service.dart';
 import '../widgets/chat_item.dart';
 import '../widgets/chat_message.dart';
 import '../widgets/typing_indicator.dart';
+import '../services/audio_recording_service.dart';
+import '../widgets/speech_to_text_overlay.dart';
 
 class ChatWithBotPage extends StatefulWidget {
   ChatWithBotPage({super.key});
@@ -293,7 +295,38 @@ class _ChatWithBotPageState extends State<ChatWithBotPage> {
                             IconButton(
                               icon: const Icon(Icons.mic),
                               onPressed: () {
-                                // Handle voice input
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (context) => SpeechToTextOverlay(
+                                    onTextResult: (text) {
+                                      setState(() {
+                                        _messages.add(ChatMessage(
+                                          message: '🎤 Voice message processed',
+                                          isFromMe: true,
+                                        ));
+                                        _messages.add(const TypingIndicator());
+                                      });
+                                      
+                                      // Add the AI response
+                                      Future.delayed(const Duration(seconds: 2), () {
+                                        if (mounted) {
+                                          setState(() {
+                                            _messages.removeLast(); // Remove typing indicator
+                                            _messages.add(ChatMessage(
+                                              message: text,
+                                              isFromMe: false,
+                                            ));
+                                          });
+                                        }
+                                      });
+                                    },
+                                    onClose: () {
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                );
                               },
                               color: const Color.fromARGB(255, 159, 109, 168),
                             ),

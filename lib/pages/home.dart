@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../model/lifts_view_model.dart';
-import 'package:provider/provider.dart';
 import './chat_with_mom_page.dart';
+import './chat_with_bot_page.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -15,130 +14,126 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return Consumer<LiftsViewModel>(
-      builder: (context, liftsViewModel, child) {
-        return Scaffold(
-          backgroundColor: Colors.white,
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // App Title
-                  const Text(
-                    'Hluvukiso',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 159, 109, 168),
-                    ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // App Title
+              const Text(
+                'Hluvukiso',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 159, 109, 168),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Search Bar with Gradient
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color.fromARGB(255, 159, 109, 168),
+                      Color.fromARGB(255, 182, 146, 189),
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
                   ),
-                  const SizedBox(height: 16),
-                  
-                  // Search Bar with Gradient
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color.fromARGB(255, 159, 109, 168),
-                          Color.fromARGB(255, 182, 146, 189),
-                        ],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.search, color: Color.fromARGB(255, 159, 109, 168)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: 'Type to search resources',
-                              border: InputBorder.none,
-                              hintStyle: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                              ),
-                            ),
-                            style: const TextStyle(color: Color.fromARGB(255, 159, 109, 168)),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, color: Color.fromARGB(255, 159, 109, 168)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Type to search resources',
+                          border: InputBorder.none,
+                          hintStyle: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
                           ),
                         ),
-                      ],
+                        style: const TextStyle(color: Color.fromARGB(255, 159, 109, 168)),
+                      ),
                     ),
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Horizontal scroll for contacts
-                  SizedBox(
-                    height: 90,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        _buildCircleAvatar(icon: Icons.add, label: 'New'),
-                        _buildCircleAvatar(imagePath: 'assets/images/mom.png', label: 'Mom'),
-                        _buildCircleAvatar(imagePath: 'assets/images/sister.png', label: 'Sister'),
-                        _buildCircleAvatar(imagePath: 'assets/images/bot.png', label: 'Evibot'),
-                        _buildCircleAvatar(imagePath: 'assets/images/united.png', label: 'Group'),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Replace the old toggle buttons with the new ToggleButtonGroup
-                  ToggleButtonGroup(),
-
-                  const SizedBox(height: 24),
-
-                  // Updated Action Cards
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      children: [
-                        _buildActionCard(
-                          'Join our',
-                          'Hluvukiso Support Group',
-                          'Get help',
-                          Icons.group_outlined,
-                          true,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildActionCard(
-                          'Seek',
-                          'Legal Advice and Support',
-                          'Get Advice',
-                          Icons.gavel_outlined,
-                          false,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildActionCard(
-                          'Share your',
-                          'Guidance and Support',
-                          'Help Others',
-                          Icons.people_outline,
-                          false,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildActionCard(
-                          '24/7',
-                          'Suicide Support',
-                          'Save A Life',
-                          Icons.favorite_outline,
-                          false,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+              
+              const SizedBox(height: 24),
+              
+              // Horizontal scroll for contacts
+              SizedBox(
+                height: 90,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _buildCircleAvatar(icon: Icons.add, label: 'New'),
+                    _buildCircleAvatar(imagePath: 'assets/images/mom.png', label: 'Mom'),
+                    _buildCircleAvatar(imagePath: 'assets/images/sister.png', label: 'Sister'),
+                    _buildCircleAvatar(imagePath: 'assets/images/bot.png', label: 'Evibot'),
+                    _buildCircleAvatar(imagePath: 'assets/images/united.png', label: 'Group'),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Replace the old toggle buttons with the new ToggleButtonGroup
+              ToggleButtonGroup(),
+
+              const SizedBox(height: 24),
+
+              // Updated Action Cards
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  children: [
+                    _buildActionCard(
+                      'Join our',
+                      'Hluvukiso Support Group',
+                      'Get help',
+                      Icons.group_outlined,
+                      true,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildActionCard(
+                      'Seek',
+                      'Legal Advice and Support',
+                      'Get Advice',
+                      Icons.gavel_outlined,
+                      false,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildActionCard(
+                      'Share your',
+                      'Guidance and Support',
+                      'Help Others',
+                      Icons.people_outline,
+                      false,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildActionCard(
+                      '24/7',
+                      'Suicide Support',
+                      'Save A Life',
+                      Icons.favorite_outline,
+                      false,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        );
-      }
+        ),
+      ),
     );
   }
 
@@ -151,6 +146,11 @@ class _MyHomePageState extends State<MyHomePage> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => ChatWithMomPage()),
+            );
+          } else if (label == 'Evibot') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ChatWithBotPage()),
             );
           }
         },

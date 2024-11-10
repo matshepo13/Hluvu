@@ -18,6 +18,9 @@ class ChatMessage extends ChatItem {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
         padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75, // Limit width to 75% of screen
+        ),
         decoration: BoxDecoration(
           color: isFromMe 
               ? const Color.fromARGB(255, 159, 109, 168)

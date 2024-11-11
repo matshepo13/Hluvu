@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:record/record.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
 
 class AudioRecordingService {
-  final _audioRecorder = Record();
+  final _audioRecorder = AudioRecorder(); // Changed from Record() to AudioRecorder()
   bool _isRecording = false;
 
   Future<bool> _checkPermissions() async {
@@ -21,10 +22,6 @@ class AudioRecordingService {
       final micResult = await Permission.microphone.request();
       final storageResult = await Permission.storage.request();
       
-      // Print status for debugging
-      print('Microphone permission status: ${micResult.name}');
-      print('Storage permission status: ${storageResult.name}');
-      
       return micResult.isGranted && storageResult.isGranted;
     } catch (e) {
       print('Error checking permissions: $e');
@@ -41,20 +38,22 @@ class AudioRecordingService {
         throw Exception('Microphone or storage permission not granted');
       }
 
-      print('Checking record plugin permission...');
-      if (await _audioRecorder.hasPermission()) {
-        print('Starting audio recording...');
-        await _audioRecorder.start(
+      // Get the temporary directory path
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final path = '${tempDir.path}/audio_$timestamp.m4a';
+
+      print('Starting audio recording...');
+      await _audioRecorder.start(
+        RecordConfig(
           encoder: AudioEncoder.aacLc,
           bitRate: 128000,
-          samplingRate: 44100,
-        );
-        _isRecording = true;
-        print('Audio recording started successfully');
-      } else {
-        print('Record plugin permission check failed');
-        throw Exception('Record plugin permission check failed');
-      }
+          sampleRate: 44100,
+        ),
+        path: path,
+      );
+      _isRecording = true;
+      print('Audio recording started successfully');
     } catch (e) {
       print('Error starting recording: $e');
       rethrow;
@@ -65,14 +64,14 @@ class AudioRecordingService {
     try {
       if (!_isRecording) return null;
       
-      print('Stopping audio recording...'); // Debug print
+      print('Stopping audio recording...');
       final path = await _audioRecorder.stop();
       _isRecording = false;
-      print('Audio recording stopped. File saved at: $path'); // Debug print
+      print('Audio recording stopped. File saved at: $path');
       
       return path;
     } catch (e) {
-      print('Error stopping recording: $e'); // Debug print
+      print('Error stopping recording: $e');
       rethrow;
     }
   }

@@ -91,179 +91,77 @@ class AlertAheadPage extends StatefulWidget {
 class _AlertAheadPageState extends State<AlertAheadPage> {
   final TextEditingController _fromController = TextEditingController();
   final TextEditingController _toController = TextEditingController();
-  GoogleMapController? _mapController;
-  Set<Marker> _markers = {};
   LatLng? _fromLocation;
   LatLng? _toLocation;
-
-  final _initialCameraPosition = const CameraPosition(
-    target: LatLng(-25.7479, 28.2293), // Pretoria coordinates
-    zoom: 13,
-  );
-
   final String? _apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
-
-  bool _showSearchAnimation = false;
+  bool _showMap = false;
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    _fromController.addListener(_updateState);
+    _toController.addListener(_updateState);
   }
 
-  Future<void> _getCurrentLocation() async {
-    try {
-      final position = await Geolocator.getCurrentPosition();
-      setState(() {
-        _fromLocation = LatLng(position.latitude, position.longitude);
-        _markers.add(
-          Marker(
-            markerId: const MarkerId('current_location'),
-            position: _fromLocation!,
-            infoWindow: const InfoWindow(title: 'Current Location'),
-          ),
-        );
-      });
-      _mapController?.animateCamera(CameraUpdate.newLatLng(_fromLocation!));
-    } catch (e) {
-      print('Error getting location: $e');
-    }
+  @override
+  void dispose() {
+    _fromController.removeListener(_updateState);
+    _toController.removeListener(_updateState);
+    _fromController.dispose();
+    _toController.dispose();
+    super.dispose();
   }
 
-  void _updateMapMarkers() {
+  void _updateState() {
     setState(() {
-      _markers.clear();
-      if (_fromLocation != null) {
-        _markers.add(
-          Marker(
-            markerId: const MarkerId('from'),
-            position: _fromLocation!,
-            infoWindow: const InfoWindow(title: 'From'),
-          ),
-        );
-      }
-      if (_toLocation != null) {
-        _markers.add(
-          Marker(
-            markerId: const MarkerId('to'),
-            position: _toLocation!,
-            infoWindow: const InfoWindow(title: 'To'),
-          ),
-        );
-      }
+      _showMap = _fromController.text.isNotEmpty && _toController.text.isNotEmpty;
     });
   }
 
-  void _handlePlaceSelection(Prediction prediction, bool isFromField) async {
-    try {
-      final response = await http.get(
-        Uri.parse(
-          'https://maps.googleapis.com/maps/api/place/details/json?place_id=${prediction.placeId}&key=$_apiKey'
-        ),
-      );
-      
-      if (response.statusCode == 200) {
-        final details = json.decode(response.body);
-        final location = details['result']['geometry']['location'];
-        
-        setState(() {
-          if (isFromField) {
-            _fromLocation = LatLng(
-              location['lat'],
-              location['lng'],
-            );
-            _fromController.text = prediction.description ?? '';
-          } else {
-            _toLocation = LatLng(
-              location['lat'],
-              location['lng'],
-            );
-            _toController.text = prediction.description ?? '';
-          }
-          _updateMapMarkers();
-        });
-
-        // Animate camera to show both markers if they exist
-        if (_fromLocation != null && _toLocation != null) {
-          _mapController?.animateCamera(
-            CameraUpdate.newLatLngBounds(
-              LatLngBounds(
-                southwest: LatLng(
-                  _fromLocation!.latitude < _toLocation!.latitude ? _fromLocation!.latitude : _toLocation!.latitude,
-                  _fromLocation!.longitude < _toLocation!.longitude ? _fromLocation!.longitude : _toLocation!.longitude,
-                ),
-                northeast: LatLng(
-                  _fromLocation!.latitude > _toLocation!.latitude ? _fromLocation!.latitude : _toLocation!.latitude,
-                  _fromLocation!.longitude > _toLocation!.longitude ? _fromLocation!.longitude : _toLocation!.longitude,
-                ),
-              ),
-              100, // padding
-            ),
-          );
-        } else {
-          // Animate to single marker
-          _mapController?.animateCamera(
-            CameraUpdate.newLatLng(
-              isFromField ? _fromLocation! : _toLocation!,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      print('Error getting place details: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error getting location details'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+  void _handlePlaceSelection(Prediction prediction, bool isFromField) {
+    if (isFromField) {
+      _fromController.text = prediction.description ?? '';
+      _fromLocation = LatLng(0, 0); // Placeholder, replace with actual coordinates
+    } else {
+      _toController.text = prediction.description ?? '';
+      _toLocation = LatLng(0, 0); // Placeholder, replace with actual coordinates
     }
+    _updateState();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_apiKey == null) {
-      return const Scaffold(
-        body: Center(
-          child: Text('Google Maps API key not found'),
-        ),
-      );
-    }
-
     return Scaffold(
-      body: Stack(
-        children: [
-          GoogleMap(
-            initialCameraPosition: _initialCameraPosition,
-            markers: _markers,
-            onMapCreated: (controller) => _mapController = controller,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: false,
-            mapType: MapType.normal,
-          ),
-          
-          Positioned(
-            top: 40,
-            left: 16,
-            child: SafeArea(
-              child: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, 
-                    color: Color.fromARGB(255, 159, 109, 168)),
-                  onPressed: () => Navigator.pop(context),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          children: [
+            if (_showMap)
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/map.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            Positioned(
+              top: 40,
+              left: 16,
+              child: SafeArea(
+                child: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, 
+                      color: Color.fromARGB(255, 159, 109, 168)),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ),
               ),
             ),
-          ),
-          
-          Positioned(
-            top: 100,
-            left: 16,
-            right: 16,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: !_showSearchAnimation ? Card(
+            Positioned(
+              top: 100,
+              left: 16,
+              right: 16,
+              child: Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -278,6 +176,17 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
                           "Current location",
                           Icons.my_location,
                           true,
+                          _fromController,
+                        ).copyWith(
+                          suffixIcon: _fromController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () {
+                                  _fromController.clear();
+                                  _updateState();
+                                },
+                              )
+                            : null,
                         ),
                         countries: const ['za'],
                         debounceTime: 800,
@@ -297,6 +206,17 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
                           "Where to?",
                           Icons.location_on_outlined,
                           false,
+                          _toController,
+                        ).copyWith(
+                          suffixIcon: _toController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () {
+                                  _toController.clear();
+                                  _updateState();
+                                },
+                              )
+                            : null,
                         ),
                         countries: const ['za'],
                         debounceTime: 800,
@@ -311,66 +231,45 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
                     ],
                   ),
                 ),
-              ) : const SizedBox(), // Empty when showing animation
+              ),
             ),
-          ),
-          
-          if (_showSearchAnimation)
-            Positioned(
-              top: MediaQuery.of(context).size.height * 0.4, // Moved down to 40% of screen height
-              left: 0,
-              right: 0,
-              child: Center(
-                child: AnimatedRings(
-                  onClose: () {
-                    setState(() {
-                      _showSearchAnimation = false;
-                    });
+            if (_showMap)
+              Positioned(
+                bottom: 32,
+                left: 16,
+                right: 16,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Handle confirm location
                   },
-                ),
-              ),
-            ),
-          
-          if (!_showSearchAnimation)
-            Positioned(
-              bottom: 32,
-              left: 16,
-              right: 16,
-              child: ElevatedButton(
-                onPressed: _fromLocation != null && _toLocation != null
-                    ? () {
-                        setState(() {
-                          _showSearchAnimation = true;
-                        });
-                      }
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 159, 109, 168),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 159, 109, 168),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Confirm Location',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  child: const Text(
+                    'Confirm Location',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
-
 
   InputDecoration _buildInputDecoration(
     String hintText,
     IconData prefixIcon,
     bool filled,
+    TextEditingController controller,
   ) {
     return InputDecoration(
       hintText: hintText,

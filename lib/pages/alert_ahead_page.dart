@@ -354,6 +354,16 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
     final size = isHorizontal 
       ? MediaQuery.of(context).size.width 
       : MediaQuery.of(context).size.height;
-    return random.nextDouble() * (size - 100); // Subtract marker size
+    
+    // Add padding to avoid overlapping with input fields
+    if (isHorizontal) {
+      // Horizontal position: Add padding from left and right edges
+      return 40 + random.nextDouble() * (size - 140); // 40px from left, 100px marker width
+    } else {
+      // Vertical position: Start below the input card
+      final topPadding = 250.0; // Adjust this value to move markers below input fields
+      final bottomPadding = 100.0; // Space from bottom for the confirm button
+      return topPadding + random.nextDouble() * (size - topPadding - bottomPadding);
+    }
   }
 }

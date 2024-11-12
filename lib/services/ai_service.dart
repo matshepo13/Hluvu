@@ -27,12 +27,21 @@ class AiService {
         From: $fromLocation
         To: $toLocation
         
-        Please provide exactly 3 known dangerous areas or zones near or between these locations. 
-        Respond ONLY with a JSON array containing objects with these exact fields: description, latitude, longitude.
+        Please provide exactly 3 known dangerous areas or zones that are specifically on streets between or near these locations.
+        For each area, include:
+        1. The specific street name
+        2. The type of crime commonly reported there
+        3. Time of day when it's most dangerous
+        
+        Respond ONLY with a JSON array containing objects with these exact fields:
+        - description: Should follow format "Street: [Street Name] - [Crime Type] - [Time of Day Risk]"
+        - latitude
+        - longitude
+
         Example format:
         [
           {
-            "description": "Example dangerous area",
+            "description": "Street: Small Street, CBD - Frequent muggings and pickpocketing - High risk after 18:00",
             "latitude": -26.1234,
             "longitude": 28.1234
           }

@@ -3,6 +3,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:my_flutter_app/services/ai_service.dart';
+import '../widgets/danger_zone_marker.dart';
+import '../models/danger_zone.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -95,6 +98,9 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
   LatLng? _toLocation;
   final String? _apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
   bool _showMap = false;
+  final AiService _aiService = AiService();
+  List<DangerZone> _dangerZones = [];
+  bool _showSearchAnimation = false;
 
   @override
   void initState() {
@@ -114,19 +120,43 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
 
   void _updateState() {
     setState(() {
-      _showMap = _fromController.text.isNotEmpty && _toController.text.isNotEmpty;
+      _showMap = _fromLocation != null && _toLocation != null;
     });
   }
 
-  void _handlePlaceSelection(Prediction prediction, bool isFromField) {
-    if (isFromField) {
-      _fromController.text = prediction.description ?? '';
-      _fromLocation = LatLng(0, 0); // Placeholder, replace with actual coordinates
-    } else {
-      _toController.text = prediction.description ?? '';
-      _toLocation = LatLng(0, 0); // Placeholder, replace with actual coordinates
+  void _handlePlaceSelection(Prediction prediction, bool isFromField) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'https://maps.googleapis.com/maps/api/place/details/json?place_id=${prediction.placeId}&key=$_apiKey'
+        ),
+      );
+      
+      if (response.statusCode == 200) {
+        final details = json.decode(response.body);
+        final location = details['result']['geometry']['location'];
+        
+        setState(() {
+          if (isFromField) {
+            _fromLocation = LatLng(
+              location['lat'],
+              location['lng'],
+            );
+            _fromController.text = prediction.description ?? '';
+          } else {
+            _toLocation = LatLng(
+              location['lat'],
+              location['lng'],
+            );
+            _toController.text = prediction.description ?? '';
+          }
+          // Only show map when both locations are properly set
+          _showMap = _fromLocation != null && _toLocation != null;
+        });
+      }
+    } catch (e) {
+      print('Error getting place details: $e');
     }
-    _updateState();
   }
 
   @override
@@ -177,16 +207,6 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
                           Icons.my_location,
                           true,
                           _fromController,
-                        ).copyWith(
-                          suffixIcon: _fromController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.close),
-                                onPressed: () {
-                                  _fromController.clear();
-                                  _updateState();
-                                },
-                              )
-                            : null,
                         ),
                         countries: const ['za'],
                         debounceTime: 800,
@@ -207,16 +227,6 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
                           Icons.location_on_outlined,
                           false,
                           _toController,
-                        ).copyWith(
-                          suffixIcon: _toController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.close),
-                                onPressed: () {
-                                  _toController.clear();
-                                  _updateState();
-                                },
-                              )
-                            : null,
                         ),
                         countries: const ['za'],
                         debounceTime: 800,
@@ -239,8 +249,32 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
                 left: 16,
                 right: 16,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Handle confirm location
+                  onPressed: () async {
+                    print('Confirm Location pressed - Starting API call');
+                    setState(() => _showSearchAnimation = true);
+                    
+                    try {
+                      print('Fetching danger zones for: From: ${_fromController.text}, To: ${_toController.text}');
+                      final zones = await _aiService.getDangerZones(
+                        _fromController.text,
+                        _toController.text,
+                      );
+                      
+                      print('Received ${zones.length} danger zones from API');
+                      
+                      setState(() {
+                        _dangerZones = zones;
+                        _showSearchAnimation = false;
+                      });
+                    } catch (e) {
+                      print('Error fetching danger zones: $e');
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error: $e')),
+                        );
+                        setState(() => _showSearchAnimation = false);
+                      }
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 159, 109, 168),
@@ -259,6 +293,21 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
                   ),
                 ),
               ),
+            if (!_showSearchAnimation && _dangerZones.isNotEmpty)
+              ..._dangerZones.map((zone) => Positioned(
+                left: _getRandomPosition(context, true),
+                top: _getRandomPosition(context, false),
+                child: DangerZoneMarker(
+                  description: zone.description ?? 'No description available',
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(zone.description ?? 'No description available'),
+                      ),
+                    );
+                  },
+                ),
+              )).toList(),
           ],
         ),
       ),
@@ -298,5 +347,13 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
         ),
       ),
     );
+  }
+
+  double _getRandomPosition(BuildContext context, bool isHorizontal) {
+    final random = math.Random();
+    final size = isHorizontal 
+      ? MediaQuery.of(context).size.width 
+      : MediaQuery.of(context).size.height;
+    return random.nextDouble() * (size - 100); // Subtract marker size
   }
 }

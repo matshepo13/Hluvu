@@ -40,6 +40,7 @@ void main() async {
   }
   
   await dotenv.load(fileName: ".env");
+  print('Google Maps API Key: ${dotenv.env['GOOGLE_MAPS_API_KEY']}'); // Debug print
   runApp(const MyApp());
 }
 

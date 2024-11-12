@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import './chat_with_mom_page.dart';
 import './chat_with_bot_page.dart';
+import './alert_ahead_page.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -114,7 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     const SizedBox(height: 8),
                     _buildActionCard(
                       'Share your',
-                      'Guidance and Support',
+                      'AlertAhead',
                       'Help Others',
                       Icons.people_outline,
                       false,
@@ -187,83 +188,93 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildActionCard(String title, String subtitle, String action, IconData icon, bool hasQuestion) {
-    return Container(
-      height: 100,
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color.fromARGB(255, 159, 109, 168).withOpacity(0.3),
-          width: 2.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
+    return GestureDetector(
+      onTap: () {
+        if (subtitle == 'AlertAhead') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AlertAheadPage()),
+          );
+        }
+      },
+      child: Container(
+        height: 100,
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color.fromARGB(255, 159, 109, 168).withOpacity(0.3),
+            width: 2.5,
           ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        leading: Icon(
-          icon,
-          color: const Color.fromARGB(255, 159, 109, 168),
-          size: 32,
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            action,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[600],
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          leading: Icon(
+            icon,
+            color: const Color.fromARGB(255, 159, 109, 168),
+            size: 32,
+          ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              action,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey[600],
+              ),
             ),
           ),
-        ),
-        trailing: hasQuestion 
-            ? Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 159, 109, 168).withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Text(
-                  '?',
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 159, 109, 168),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+          trailing: hasQuestion 
+              ? Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 159, 109, 168).withOpacity(0.1),
+                    shape: BoxShape.circle,
                   ),
-                ),
-              )
-            : null,
+                  child: const Text(
+                    '?',
+                    style: TextStyle(
+                      color: Color.fromARGB(255, 159, 109, 168),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                )
+              : null,
+        ),
       ),
     );
   }

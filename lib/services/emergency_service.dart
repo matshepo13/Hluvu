@@ -68,13 +68,19 @@ class EmergencyService {
       final emergencyMessage = 'Emergency alert! The user who triggered this alert may be in danger. '
           'Their location has been sent to your phone. Please respond immediately.';
       
-      await _twilioService.makeEmergencyCall(
-        dotenv.env['EMERGENCY_CONTACT_NUMBER'] ?? '',
-        emergencyMessage,
-      );
-      
-      // Send SMS with location
-      final smsMessage = 'EMERGENCY ALERT: Someone needs help! '
+      // Try to make the call first
+      try {
+        await _twilioService.makeEmergencyCall(
+          dotenv.env['EMERGENCY_CONTACT_NUMBER'] ?? '',
+          emergencyMessage,
+        );
+      } catch (e) {
+        print('Voice call failed, falling back to SMS: $e');
+        // Continue execution to send SMS
+      }
+
+      // Always send SMS as backup
+      final smsMessage = 'EMERGENCY ALERT: Matshepo is unsafe, please send help! '
           'Their location: $mapsLink';
       
       await _twilioService.sendSMS(
@@ -82,7 +88,7 @@ class EmergencyService {
         smsMessage,
       );
       
-      print('Emergency alert, call, and SMS completed successfully');
+      print('Emergency alert and SMS completed successfully');
     } catch (e) {
       print('Error in handleEmergency: $e');
       rethrow;

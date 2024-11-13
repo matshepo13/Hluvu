@@ -25,7 +25,6 @@ class TwilioService {
 
       print('Making Twilio API call to: ${url.toString()}');
       print('Using Account SID: $accountSid');
-      print('Authorization Header: Basic $credentials');
 
       final response = await http.post(
         url,
@@ -36,7 +35,7 @@ class TwilioService {
         body: {
           'To': to,
           'From': twilioNumber,
-          'Twiml': '<Response><Say>$message</Say></Response>',
+          'Url': 'https://emergency-call-service-XXXX.twil.io/emergency-twiml',
         },
       );
 

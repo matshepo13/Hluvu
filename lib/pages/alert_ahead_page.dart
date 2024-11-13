@@ -101,6 +101,7 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
   final AiService _aiService = AiService();
   List<DangerZone> _dangerZones = [];
   bool _showSearchAnimation = false;
+  bool _showRingsAnimation = false;
 
   @override
   void initState() {
@@ -166,84 +167,99 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
         onTap: () => FocusScope.of(context).unfocus(),
         child: Stack(
           children: [
-            if (_showMap)
+            // Only show map when animation is not active
+            if (_showMap && !_showRingsAnimation)
               Positioned.fill(
                 child: Image.asset(
                   'assets/images/map.png',
                   fit: BoxFit.cover,
                 ),
               ),
-            Positioned(
-              top: 40,
-              left: 16,
-              child: SafeArea(
-                child: CircleAvatar(
-                  backgroundColor: Colors.white,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, 
-                      color: Color.fromARGB(255, 159, 109, 168)),
-                    onPressed: () => Navigator.pop(context),
+            // Show rings animation
+            if (_showRingsAnimation)
+              Positioned.fill(
+                child: AnimatedRings(
+                  onClose: () {
+                    setState(() => _showRingsAnimation = false);
+                  },
+                ),
+              ),
+            // Only show back button when animation is not active
+            if (!_showRingsAnimation)
+              Positioned(
+                top: 40,
+                left: 16,
+                child: SafeArea(
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, 
+                        color: Color.fromARGB(255, 159, 109, 168)),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              top: 100,
-              left: 16,
-              right: 16,
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      GooglePlaceAutoCompleteTextField(
-                        textEditingController: _fromController,
-                        googleAPIKey: _apiKey!,
-                        inputDecoration: _buildInputDecoration(
-                          "Current location",
-                          Icons.my_location,
-                          true,
-                          _fromController,
+            // Only show input fields when animation is not active
+            if (!_showRingsAnimation)
+              Positioned(
+                top: 100,
+                left: 16,
+                right: 16,
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        GooglePlaceAutoCompleteTextField(
+                          textEditingController: _fromController,
+                          googleAPIKey: _apiKey!,
+                          inputDecoration: _buildInputDecoration(
+                            "Current location",
+                            Icons.my_location,
+                            true,
+                            _fromController,
+                          ),
+                          countries: const ['za'],
+                          debounceTime: 800,
+                          isLatLngRequired: true,
+                          getPlaceDetailWithLatLng: (Prediction prediction) {
+                            _handlePlaceSelection(prediction, true);
+                          },
+                          itemClick: (Prediction prediction) {
+                            _handlePlaceSelection(prediction, true);
+                          },
                         ),
-                        countries: const ['za'],
-                        debounceTime: 800,
-                        isLatLngRequired: true,
-                        getPlaceDetailWithLatLng: (Prediction prediction) {
-                          _handlePlaceSelection(prediction, true);
-                        },
-                        itemClick: (Prediction prediction) {
-                          _handlePlaceSelection(prediction, true);
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      GooglePlaceAutoCompleteTextField(
-                        textEditingController: _toController,
-                        googleAPIKey: _apiKey!,
-                        inputDecoration: _buildInputDecoration(
-                          "Where to?",
-                          Icons.location_on_outlined,
-                          false,
-                          _toController,
+                        const SizedBox(height: 12),
+                        GooglePlaceAutoCompleteTextField(
+                          textEditingController: _toController,
+                          googleAPIKey: _apiKey!,
+                          inputDecoration: _buildInputDecoration(
+                            "Where to?",
+                            Icons.location_on_outlined,
+                            false,
+                            _toController,
+                          ),
+                          countries: const ['za'],
+                          debounceTime: 800,
+                          isLatLngRequired: true,
+                          getPlaceDetailWithLatLng: (Prediction prediction) {
+                            _handlePlaceSelection(prediction, false);
+                          },
+                          itemClick: (Prediction prediction) {
+                            _handlePlaceSelection(prediction, false);
+                          },
                         ),
-                        countries: const ['za'],
-                        debounceTime: 800,
-                        isLatLngRequired: true,
-                        getPlaceDetailWithLatLng: (Prediction prediction) {
-                          _handlePlaceSelection(prediction, false);
-                        },
-                        itemClick: (Prediction prediction) {
-                          _handlePlaceSelection(prediction, false);
-                        },
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            if (_showMap)
+            // Only show confirm button when animation is not active and map is shown
+            if (_showMap && !_showRingsAnimation)
               Positioned(
                 bottom: 32,
                 left: 16,
@@ -251,7 +267,7 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
                 child: ElevatedButton(
                   onPressed: () async {
                     print('Confirm Location pressed - Starting API call');
-                    setState(() => _showSearchAnimation = true);
+                    setState(() => _showRingsAnimation = true);
                     
                     try {
                       print('Fetching danger zones for: From: ${_fromController.text}, To: ${_toController.text}');
@@ -264,7 +280,7 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
                       
                       setState(() {
                         _dangerZones = zones;
-                        _showSearchAnimation = false;
+                        _showRingsAnimation = false;
                       });
                     } catch (e) {
                       print('Error fetching danger zones: $e');
@@ -272,7 +288,7 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Error: $e')),
                         );
-                        setState(() => _showSearchAnimation = false);
+                        setState(() => _showRingsAnimation = false);
                       }
                     }
                   },
@@ -293,7 +309,8 @@ class _AlertAheadPageState extends State<AlertAheadPage> {
                   ),
                 ),
               ),
-            if (!_showSearchAnimation && _dangerZones.isNotEmpty)
+            // Only show danger zone markers when animation is not active
+            if (!_showSearchAnimation && !_showRingsAnimation && _dangerZones.isNotEmpty)
               ..._dangerZones.map((zone) => Positioned(
                 left: _getRandomPosition(context, true),
                 top: _getRandomPosition(context, false),

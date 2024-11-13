@@ -47,9 +47,17 @@ Please provide a helpful response:
 
   Future<String> analyzeDialog(String dialog) async {
     try {
+      final now = DateTime.now();
+      final dateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+      final timeStr = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+
       final prompt = '''
 You are a law enforcement AI assistant analyzing a potential criminal incident dialog.
 Please create a detailed criminal statement report with the following sections:
+
+REPORT DETAILS:
+Date of Report: $dateStr
+Time of Report: $timeStr
 
 1. INCIDENT SUMMARY
 2. VICTIM DETAILS
@@ -60,6 +68,7 @@ Please create a detailed criminal statement report with the following sections:
 
 Analyze the tone, identify any physical abuse mentions, and assess the severity of the situation.
 Focus on documenting evidence that could be useful for law enforcement.
+Always include the date and time at the beginning of the report.
 
 Dialog transcript:
 $dialog
@@ -69,10 +78,15 @@ Generate a formal criminal report:
 
       final content = [Content.text(prompt)];
       final response = await _model.generateContent(content);
-      return response.text ?? "Error generating report";
+      
+      if (response.text == null || response.text!.isEmpty) {
+        return "Error: Unable to generate incident report. Please try again.";
+      }
+      
+      return response.text!;
     } catch (e) {
       print('Error in analyzeDialog: $e');
-      return "Error generating criminal report";
+      return "Error generating incident report. If you're in immediate danger, please use the 'I am not safe' button.";
     }
   }
 }

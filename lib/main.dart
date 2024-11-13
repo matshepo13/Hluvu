@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker_windows/image_picker_windows.dart';
+import './widgets/sos_button_overlay.dart';
 
 Future<void> requestPermissions() async {
   Map<Permission, PermissionStatus> statuses = await [
@@ -54,7 +55,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const LoginPage(),
+      home: Navigator(
+        onGenerateRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (context) => Stack(
+              children: [
+                const LoginPage(),
+                const SosButtonOverlay(),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

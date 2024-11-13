@@ -8,7 +8,12 @@ import '../services/audio_recording_service.dart';
 import '../widgets/speech_to_text_overlay.dart';
 
 class ChatWithBotPage extends StatefulWidget {
-  ChatWithBotPage({super.key});
+  final bool fromSOS;
+  
+  const ChatWithBotPage({
+    super.key,
+    this.fromSOS = false,
+  });
 
   @override
   State<ChatWithBotPage> createState() => _ChatWithBotPageState();
@@ -66,6 +71,54 @@ class _ChatWithBotPageState extends State<ChatWithBotPage> {
           ));
         });
       }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // If opened from SOS, trigger microphone after a short delay
+    if (widget.fromSOS) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Short delay to ensure the page is fully built
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => SpeechToTextOverlay(
+                onTextResult: (text) {
+                  setState(() {
+                    _messages.add(ChatMessage(
+                      message: '🎤 Voice message processed',
+                      isFromMe: true,
+                    ));
+                    _messages.add(const TypingIndicator());
+                  });
+                  
+                  // Add the AI response
+                  Future.delayed(const Duration(seconds: 2), () {
+                    if (mounted) {
+                      setState(() {
+                        _messages.removeLast(); // Remove typing indicator
+                        _messages.add(ChatMessage(
+                          message: text,
+                          isFromMe: false,
+                        ));
+                      });
+                    }
+                  });
+                },
+                onClose: () {
+                  Navigator.pop(context);
+                },
+              ),
+            );
+          }
+        });
+      });
     }
   }
 

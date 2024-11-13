@@ -1,5 +1,7 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:geolocator/geolocator.dart';
+import './location_service.dart';
 
 class GeminiService {
   late final GenerativeModel _model;
@@ -51,6 +53,20 @@ Please provide a helpful response:
       final dateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
       final timeStr = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
 
+      // Get location
+      String locationInfo = "Location unavailable";
+      try {
+        bool hasPermission = await LocationService.handleLocationPermission();
+        if (hasPermission) {
+          Position position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high
+          );
+          locationInfo = "https://www.google.com/maps?q=${position.latitude},${position.longitude}";
+        }
+      } catch (e) {
+        print('Error getting location: $e');
+      }
+
       final prompt = '''
 You are a law enforcement AI assistant analyzing a potential criminal incident dialog.
 Please create a detailed criminal statement report with the following sections:
@@ -58,6 +74,7 @@ Please create a detailed criminal statement report with the following sections:
 REPORT DETAILS:
 Date of Report: $dateStr
 Time of Report: $timeStr
+Location: $locationInfo
 
 1. INCIDENT SUMMARY
 2. VICTIM DETAILS
@@ -68,7 +85,7 @@ Time of Report: $timeStr
 
 Analyze the tone, identify any physical abuse mentions, and assess the severity of the situation.
 Focus on documenting evidence that could be useful for law enforcement.
-Always include the date and time at the beginning of the report.
+Always include the date, time, and location at the beginning of the report.
 
 Dialog transcript:
 $dialog

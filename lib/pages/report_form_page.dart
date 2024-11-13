@@ -442,28 +442,7 @@ Anonymous Reporting System
 
       if (response.statusCode == 200) {
         if (mounted) {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text(_isEnglish ? 'Success' : 'Katlego'),
-                content: Text(
-                  _isEnglish 
-                    ? 'Your report has been submitted successfully.'
-                    : 'Pegelo ya gago e rometse sentle.',
-                ),
-                actions: [
-                  TextButton(
-                    child: Text(_isEnglish ? 'OK' : 'Go siame'),
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Close dialog
-                      Navigator.of(context).pop(); // Return to previous screen
-                    },
-                  ),
-                ],
-              );
-            },
-          );
+          _showConfirmationDialog();
         }
       } else {
         throw 'Failed to submit form';
@@ -483,5 +462,94 @@ Anonymous Reporting System
         );
       }
     }
+  }
+
+  void _showConfirmationDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 243, 235, 245),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.lock,
+                        size: 48,
+                        color: const Color.fromARGB(255, 159, 109, 168),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _isEnglish ? 'Report Submitted Successfully' : 'Pegelo e Rometse Sentle',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _isEnglish
+                            ? 'Thank you for submitting your report.\nRest assured your identity remains anonymous. Our team will review the information provided and take the necessary actions.'
+                            : 'Re leboga go romela pegelo ya gago.\nO seke wa tshwenyega ka boitshupo jwa gago bo sala bo sa itsiwe. Setlhopha sa rona se tlaa sekaseka tshedimosetso e o e fileng mme se tseye dikgato tse di tlhokegang.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        _isEnglish
+                            ? 'If you have any further questions or need assistance, feel free to contact our support team.'
+                            : 'Fa o na le dipotso dingwe kgotsa o tlhoka thuso, o gololesegile go ikgolaganya le setlhopha sa rona sa thuso.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 159, 109, 168),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    _isEnglish ? 'Return to Home' : 'Boela Kwa Gae',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

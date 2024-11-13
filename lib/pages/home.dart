@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import './chat_with_mom_page.dart';
 import './chat_with_bot_page.dart';
 import './alert_ahead_page.dart';
+import './anonymous_reporting_page.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -99,7 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: [
                     _buildActionCard(
                       'Join our',
-                      'Hluvukiso Support Group',
+                      'Anonymous Reporting',
                       'Get help',
                       Icons.group_outlined,
                       true,
@@ -194,6 +195,11 @@ class _MyHomePageState extends State<MyHomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AlertAheadPage()),
+          );
+        } else if (subtitle == 'Anonymous Reporting') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AnonymousReportingPage()),
           );
         }
       },

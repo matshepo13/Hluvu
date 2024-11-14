@@ -48,24 +48,42 @@ class _ChatWithBotPageState extends State<ChatWithBotPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
     try {
-      await Future.delayed(const Duration(seconds: 5));
-      final response = await _geminiService.generateResponse(message);
-      
-      if (mounted) {
-        setState(() {
-          _messages.removeLast();
-          _messages.add(ChatMessage(
-            message: response,
-            isFromMe: false,
-          ));
-        });
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      if (message.toLowerCase() == 'any evidence') {
+        // Remove typing indicator after a short delay
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          setState(() {
+            _messages.removeLast(); // Remove typing indicator
+            _messages.add(ChatMessage(
+              message: 'Here are the supporting images from the incident:',
+              isFromMe: false,
+              images: [
+                'assets/images/map.png',
+                'assets/images/bot.png',
+              ],
+            ));
+          });
+        }
+      } else {
+        await Future.delayed(const Duration(seconds: 5));
+        final response = await _geminiService.generateResponse(message);
+        
+        if (mounted) {
+          setState(() {
+            _messages.removeLast();
+            _messages.add(ChatMessage(
+              message: response,
+              isFromMe: false,
+            ));
+          });
+        }
       }
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } catch (e) {
       if (mounted) {
         setState(() {
           _messages.removeLast();
-          _messages.add(ChatMessage(
+          _messages.add(const ChatMessage(
             message: "I apologize, but I'm having trouble responding right now. If you need immediate help, please use the 'I am not safe' button above.",
             isFromMe: false,
           ));

@@ -6,12 +6,14 @@ class ChatMessage extends ChatItem {
   final String message;
   final bool isFromMe;
   final PdfAttachment? attachment;
+  final List<String>? images;
 
   const ChatMessage({
     super.key,
     required this.message,
     required this.isFromMe,
     this.attachment,
+    this.images,
   });
 
   @override
@@ -41,6 +43,26 @@ class ChatMessage extends ChatItem {
                   fontSize: 16,
                 ),
               ),
+              if (images != null && images!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: images!.map((imagePath) => Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            imagePath,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )).toList(),
+                ),
+              ],
               if (attachment != null)
                 Row(
                   mainAxisSize: MainAxisSize.min,

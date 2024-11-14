@@ -100,8 +100,7 @@ Please create a detailed criminal statement report with the following sections:
 REPORT DETAILS:
 Date of Report: $dateStr
 Time of Report: $timeStr
-Location Address: $locationInfo
-Google Maps Link: $mapsLink
+Location Address: $mapsLink
 
 1. INCIDENT SUMMARY
 2. VICTIM DETAILS

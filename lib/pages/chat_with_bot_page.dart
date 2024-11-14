@@ -58,8 +58,8 @@ class _ChatWithBotPageState extends State<ChatWithBotPage> {
               message: 'Here are the supporting images from the incident:',
               isFromMe: false,
               images: [
-                'assets/images/map.png',
-                'assets/images/bot.png',
+                'assets/images/evi1.png',
+                'assets/images/evi2.png',
               ],
             ));
           });

@@ -47,7 +47,7 @@ class EmergencyService {
         await Future.delayed(Duration(seconds: attempt)); // Exponential backoff
       }
     }
-    throw 'Failed after $maxAttempts attempts';
+    throw Exception('Failed after $maxAttempts attempts');
   }
 
   Future<void> handleEmergency() async {
@@ -64,31 +64,49 @@ class EmergencyService {
       // Send email
       await _sendEmergencyWithRetry(mapsLink);
       
-      // Make emergency call
-      final emergencyMessage = 'Emergency alert! The user who triggered this alert may be in danger. '
-          'Their location has been sent to your phone. Please respond immediately.';
-      
-      // Try to make the call first
-      try {
-        await _twilioService.makeEmergencyCall(
-          dotenv.env['EMERGENCY_CONTACT_NUMBER'] ?? '',
-          emergencyMessage,
-        );
-      } catch (e) {
-        print('Voice call failed, falling back to SMS: $e');
-        // Continue execution to send SMS
+      final emergencyNumber = dotenv.env['EMERGENCY_CONTACT_NUMBER'];
+      if (emergencyNumber == null || emergencyNumber.isEmpty) {
+        throw Exception('Emergency contact number not configured');
       }
 
-      // Always send SMS as backup
+      // Prepare messages
+      final voiceMessage = 'Emergency alert! The user who triggered this alert may be in danger. '
+          'Their location has been sent to your phone. Please respond immediately.';
+      
       final smsMessage = 'EMERGENCY ALERT: Matshepo is unsafe, please send help! '
           'Their location: $mapsLink';
+
+      // Try voice call first
+      bool callSuccessful = false;
+      String callError = '';
       
-      await _twilioService.sendSMS(
-        dotenv.env['EMERGENCY_CONTACT_NUMBER'] ?? '',
-        smsMessage,
-      );
+      try {
+        await _twilioService.makeEmergencyCall(emergencyNumber, voiceMessage);
+        callSuccessful = true;
+        print('Voice call completed successfully');
+      } catch (e) {
+        callError = e.toString();
+        print('Voice call failed: $callError');
+      }
+
+      // Always send SMS as backup or primary if call failed
+      try {
+        await _twilioService.sendSMS(emergencyNumber, smsMessage);
+        print('SMS sent successfully');
+      } catch (e) {
+        // If both call and SMS fail, throw combined error
+        if (!callSuccessful) {
+          throw Exception('Emergency services failed - Call error: $callError, SMS error: $e');
+        }
+        // If only SMS fails but call succeeded, log but don't throw
+        print('Warning: Backup SMS failed but call succeeded: $e');
+      }
+
+      if (!callSuccessful) {
+        print('Voice call failed but SMS was sent as backup');
+      }
       
-      print('Emergency alert and SMS completed successfully');
+      print('Emergency alert process completed');
     } catch (e) {
       print('Error in handleEmergency: $e');
       rethrow;

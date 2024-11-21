@@ -8,7 +8,12 @@ import '../services/audio_recording_service.dart';
 import '../widgets/speech_to_text_overlay.dart';
 
 class ChatWithBotPage extends StatefulWidget {
-  ChatWithBotPage({super.key});
+  final bool fromSOS;
+  
+  const ChatWithBotPage({
+    super.key,
+    this.fromSOS = false,
+  });
 
   @override
   State<ChatWithBotPage> createState() => _ChatWithBotPageState();
@@ -43,29 +48,95 @@ class _ChatWithBotPageState extends State<ChatWithBotPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
     try {
-      await Future.delayed(const Duration(seconds: 5));
-      final response = await _geminiService.generateResponse(message);
-      
-      if (mounted) {
-        setState(() {
-          _messages.removeLast();
-          _messages.add(ChatMessage(
-            message: response,
-            isFromMe: false,
-          ));
-        });
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      if (message.toLowerCase() == 'any evidence') {
+        // Remove typing indicator after a short delay
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          setState(() {
+            _messages.removeLast(); // Remove typing indicator
+            _messages.add(ChatMessage(
+              message: 'Here are the supporting images from the incident:',
+              isFromMe: false,
+              images: [
+                'assets/images/evi1.png',
+                'assets/images/evi2.png',
+              ],
+            ));
+          });
+        }
+      } else {
+        await Future.delayed(const Duration(seconds: 5));
+        final response = await _geminiService.generateResponse(message);
+        
+        if (mounted) {
+          setState(() {
+            _messages.removeLast();
+            _messages.add(ChatMessage(
+              message: response,
+              isFromMe: false,
+            ));
+          });
+        }
       }
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } catch (e) {
       if (mounted) {
         setState(() {
           _messages.removeLast();
-          _messages.add(ChatMessage(
+          _messages.add(const ChatMessage(
             message: "I apologize, but I'm having trouble responding right now. If you need immediate help, please use the 'I am not safe' button above.",
             isFromMe: false,
           ));
         });
       }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // If opened from SOS, trigger microphone after a short delay
+    if (widget.fromSOS) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Short delay to ensure the page is fully built
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => SpeechToTextOverlay(
+                onTextResult: (text) {
+                  setState(() {
+                    _messages.add(ChatMessage(
+                      message: '🎤 Voice message processed',
+                      isFromMe: true,
+                    ));
+                    _messages.add(const TypingIndicator());
+                  });
+                  
+                  // Add the AI response
+                  Future.delayed(const Duration(seconds: 2), () {
+                    if (mounted) {
+                      setState(() {
+                        _messages.removeLast(); // Remove typing indicator
+                        _messages.add(ChatMessage(
+                          message: text,
+                          isFromMe: false,
+                        ));
+                      });
+                    }
+                  });
+                },
+                onClose: () {
+                  Navigator.pop(context);
+                },
+              ),
+            );
+          }
+        });
+      });
     }
   }
 

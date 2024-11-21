@@ -27,6 +27,7 @@ class _SpeechToTextOverlayState extends State<SpeechToTextOverlay> {
   String _transcribedText = '';
   final Random _random = Random();
   final GeminiService _geminiService = GeminiService();
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -61,9 +62,13 @@ class _SpeechToTextOverlayState extends State<SpeechToTextOverlay> {
   }
 
   void _handleVoiceMessage() async {
-    if (!mounted) return;
+    if (_isProcessing || !mounted) return;
     
     try {
+      setState(() {
+        _isProcessing = true;
+      });
+      
       print('Starting voice message handling...');
       
       // Read the dialog.txt file
@@ -94,6 +99,12 @@ class _SpeechToTextOverlayState extends State<SpeechToTextOverlay> {
             backgroundColor: Colors.red,
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
       }
     }
   }

@@ -5,19 +5,21 @@ import './pages/LoginPage.dart';
 import 'firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:image_picker_windows/image_picker_windows.dart';
+import './widgets/sos_button_overlay.dart';
 
 Future<void> requestPermissions() async {
   Map<Permission, PermissionStatus> statuses = await [
     Permission.microphone,
     Permission.storage,
     Permission.location,
+    Permission.camera,
   ].request();
 
   statuses.forEach((permission, status) {
     print('$permission status: ${status.name}');
   });
 
-  // If any permission is denied, show the app settings
   if (statuses.values.any((status) => status.isDenied)) {
     print('Some permissions were denied. Opening settings...');
     await openAppSettings();
@@ -27,7 +29,6 @@ Future<void> requestPermissions() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Request permissions regardless of platform during development
   await requestPermissions();
 
   try {
@@ -40,6 +41,7 @@ void main() async {
   }
   
   await dotenv.load(fileName: ".env");
+  print('Google Maps API Key: ${dotenv.env['GOOGLE_MAPS_API_KEY']}'); // Debug print
   runApp(const MyApp());
 }
 
@@ -53,7 +55,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const LoginPage(),
+      home: Navigator(
+        onGenerateRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (context) => Stack(
+              children: [
+                const LoginPage(),
+                const SosButtonOverlay(),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

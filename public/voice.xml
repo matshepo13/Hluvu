@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice">Emergency alert! The user who triggered this alert may be in danger. Their location has been sent to your phone. Please respond immediately.</Say>
+    <Pause length="2"/>
+    <Say voice="alice">This is an automated emergency call from the safety app. Please check your messages for location details.</Say>
+</Response>
